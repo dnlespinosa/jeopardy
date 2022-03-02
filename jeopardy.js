@@ -54,11 +54,11 @@ async function getCategory(catId) {
     const res = await axios.get('http://jservice.io/api/clues');
     // console.log(res.data);
     let arr = [];
+    let obj = {};
+    let arr2 = [];
     for (let id of res.data){
         // console.log(id);
         if (id.category_id === catId){
-            let obj = {};
-            let arr2 = [];
             arr2.push({
                 question: id.question, 
                 answer: id.answer
@@ -68,7 +68,8 @@ async function getCategory(catId) {
             arr.push(obj);
         }
     }
-    return arr;
+
+    return arr[0];
 }
 
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
@@ -88,7 +89,7 @@ async function fillTable() {
     const top = document.createElement('thead');
     top.setAttribute('id', 'top-head');
     for (let x =0; x<6; x++){
-        // let val = getCategory(getCategoryIds());
+
         const headCell = document.createElement('td');
         headCell.setAttribute('id', 'x');
         top.append(headCell);
