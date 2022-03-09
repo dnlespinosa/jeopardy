@@ -1,3 +1,6 @@
+// READ ME
+// currently when pressing the restart button, the game board will load, no categories in the top section and ? in all playable squares. In the DOM when I run the function fillCategories(), I will get 6 categories formatted to the data structure below. In  the DOM when I run the function insertHeaders(), the data from the categories array is placed on the board and is playable. 
+
 // categories is the main data structure for the app; it looks like this:
 
 //  [
@@ -28,15 +31,13 @@ let catId = [];
 
 async function getCategoryIds() {
     const res = await axios.get('http://jservice.io/api/clues')
-    // console.log(res.data);
     let arr = [];
+    let arr2 = [];
     for (let id of res.data){
         arr.push(id.category.id);
-        // console.log(id.category.id);
     }
     const randInt = Math.floor(Math.random()*100)+1;
     catId.push(arr[randInt]);
-    return catId;
     }
 
 /** Return object with data about a category:
@@ -53,12 +54,10 @@ async function getCategoryIds() {
 
 async function getCategory(catId) {
     const res = await axios.get('http://jservice.io/api/clues');
-    // console.log(res.data);
     let arr = [];
     let obj = {};
     let arr2 = [];
     for (let id of res.data){
-        // console.log(id);
         if (id.category_id === catId){
             arr2.push({
                 question: id.question, 
@@ -71,7 +70,6 @@ async function getCategory(catId) {
     }
 
     categories.push(arr[0]);
-    return categories;
 }
 
 /** Fill the HTML table#jeopardy with the categories & cells for questions.
@@ -85,7 +83,6 @@ async function getCategory(catId) {
 
 
 async function fillTable() {
-
     const body = document.querySelector('body');
     const board = document.createElement('table');
     board.setAttribute('id', 'board');
@@ -106,10 +103,10 @@ async function fillTable() {
             cell.setAttribute('class', '?');
             cell.innerText = '?';
             row.append(cell);
+            cell.addEventListener('click', handleClick)
         }
         board.append(row);
     }
-    // put board on the actual page
     body.append(board);
 
 }
@@ -117,14 +114,28 @@ async function fillTable() {
 
 
 function fillCatId() {
+    catId = [];
     for (let x=0; x<6; x++){
         getCategoryIds();
     }
 }
 
+function removeDuplicates(arr){
+    let arr2 = arr.filter((num, index) => arr.indexOf(num)===index);
+    catId = arr2;
+}
+
+function replaceValues () {
+    let num ='';
+    if(catId.length<6){
+        num = 6-catId.length;
+    }
+    console.log(num);
+}
+
 function fillCategories() {
-    for (let x=0; x<6; x++){
-        getCategory(catId[x]);
+    for (let num of catId){
+        getCategory(num);
     }
 }
 
@@ -136,17 +147,6 @@ function insertHeaders() {
         } else {
             item.innerText = categories[x].title
         }
-    }
-    for (let x=0; x<6; x++){
-        for (let y=0; y<6; y++){
-            let itemBlock = document.getElementById(`${y}-${x}`);
-            if (categories[x].clues[y].question === ''){
-                itemBlock.innerText = 'RELOAD PAGE';
-            } else {
-                itemBlock.innerText = categories[x].clues[y].question
-            }
-        }
-            
     }
 }
 
@@ -162,6 +162,29 @@ function insertHeaders() {
  * */
 
 function handleClick(evt) {
+    let x = evt.target.id;
+    let num = x.split('');
+    let ditch = num.splice(1,1);
+    let num1 = num[0];
+    let num2 = num[1];
+    if (evt.target.innerText === "?"){
+        if (categories[num1].clues[num2].question === '' || categories[num1].clues[num2].question === undefined){
+            evt.target.innerText = 'RELOAD PAGE';
+        } else {
+            evt.target.innerText = categories[num1].clues[num2].question
+        }
+        evt.target.class = 'CLICKED';
+    } else if (evt.target.class === 'CLICKED') {
+        if (evt.target.innerText === 'RELOAD PAGE'){
+            evt.target.innerText = 'RELOAD PAGE';
+        } else if (categories[num1].clues[num2].answer === '' || categories[num1] === undefined){
+            evt.target.innerText = 'RELOAD PAGE';
+        }
+        else {
+            evt.target.innerText = categories[num1].clues[num2].answer;
+        }
+        evt.target.class = 'SOLVED';
+    }
 }
 
 /** Wipe the current Jeopardy board, show the loading spinner,
@@ -185,6 +208,10 @@ function hideLoadingView() {
  * */
 
 async function setupAndStart() {
+    await fillCatId();
+    await fillCategories();
+    fillTable();
+
 }
 
 /** On click of start / restart button, set up game. */
@@ -195,6 +222,14 @@ async function setupAndStart() {
 
 // TODO
 
+let body = document.querySelector('body');
+let btn = document.createElement('button');
+btn.innerText = 'RESTART GAME';
+btn.addEventListener('click', setupAndStart);
+body.append(btn);
 
 
-fillTable();
+
+
+
+
